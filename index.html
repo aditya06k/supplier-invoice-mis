@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Supplier Invoice Verification MIS — Track, approve, and audit supply chain invoices." />
+  <title>InvoiceOS — Supplier Invoice Verification MIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="index.css" />
+
+  <!-- Firebase Web SDK v10 (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- ════════════════ LOGIN PAGE ════════════════ -->
+  <div class="login-page" id="loginPage">
+    <div class="login-glow"></div>
+    <div class="login-card">
+      <div class="login-brand">
+        <svg width="36" height="36" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="2" width="10" height="10" rx="2" fill="#2563EB"/>
+          <rect x="16" y="2" width="10" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+          <rect x="2" y="16" width="10" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+          <rect x="16" y="16" width="10" height="10" rx="2" fill="#2563EB" opacity="0.25"/>
+        </svg>
+        <h1>InvoiceOS</h1>
+        <p>Supply Chain Invoice Verification</p>
+      </div>
+      <form id="loginForm" autocomplete="off">
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="you@company.com" required />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required />
+        </div>
+        <div class="form-group">
+          <label for="loginRole">Sign in as</label>
+          <div class="role-select-group">
+            <label class="role-option active" data-role="supplier">
+              <input type="radio" name="loginRole" value="supplier" checked />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <span>Supplier</span>
+            </label>
+            <label class="role-option" data-role="manager">
+              <input type="radio" name="loginRole" value="manager" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Manager</span>
+            </label>
+            <label class="role-option" data-role="auditor">
+              <input type="radio" name="loginRole" value="auditor" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>Auditor</span>
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+          Sign In
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </form>
+      <p class="login-hint">Demo — any email/password works. Pick a role above.</p>
+      <p class="login-hint" style="margin-top: 18px; cursor: pointer; color: var(--accent);" id="showSignupBtn">Don't have an account? <strong>Sign Up</strong></p>
+    </div>
+  </div>
+
+  <!-- ════════════════ SIGNUP PAGE ════════════════ -->
+  <div class="login-page hidden" id="signupPage">
+    <div class="login-glow"></div>
+    <div class="login-card">
+      <div class="login-brand">
+        <svg width="36" height="36" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="2" width="10" height="10" rx="2" fill="#2563EB"/>
+          <rect x="16" y="2" width="10" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+          <rect x="2" y="16" width="10" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+          <rect x="16" y="16" width="10" height="10" rx="2" fill="#2563EB" opacity="0.25"/>
+        </svg>
+        <h1>InvoiceOS</h1>
+        <p>Create an Account</p>
+      </div>
+      <form id="signupForm" autocomplete="off">
+        <div class="form-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="John Doe" required />
+        </div>
+        <div class="form-group">
+          <label for="signupEmail">Email Address</label>
+          <input type="email" id="signupEmail" placeholder="you@company.com" required />
+        </div>
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="••••••••" required minlength="6" />
+        </div>
+        <div class="form-group">
+          <label for="signupRole">Sign up as</label>
+          <div class="role-select-group">
+            <label class="role-option active" data-role="supplier">
+              <input type="radio" name="signupRole" value="supplier" checked />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <span>Supplier</span>
+            </label>
+            <label class="role-option" data-role="manager">
+              <input type="radio" name="signupRole" value="manager" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Manager</span>
+            </label>
+            <label class="role-option" data-role="auditor">
+              <input type="radio" name="signupRole" value="auditor" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>Auditor</span>
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="signupSubmitBtn">
+          Sign Up
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </form>
+      <p class="login-hint" style="margin-top: 18px; cursor: pointer; color: var(--accent);" id="showLoginBtn">Already have an account? <strong>Login</strong></p>
+    </div>
+  </div>
+  <!-- ════════════════ APP SHELL ════════════════ -->
+  <div class="app-shell hidden" id="appShell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="2" width="10" height="10" rx="2" fill="#2563EB"/>
+          <rect x="16" y="2" width="10" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+          <rect x="2" y="16" width="10" height="10" rx="2" fill="#2563EB" opacity="0.5"/>
+          <rect x="16" y="16" width="10" height="10" rx="2" fill="#2563EB" opacity="0.25"/>
+        </svg>
+        <div>
+          <span class="brand-name">InvoiceOS</span>
+          <span class="brand-sub">MIS Platform</span>
+        </div>
+      </div>
+
+      <div class="sidebar-user" id="sidebarUser">
+        <div class="avatar" id="userAvatar">A</div>
+        <div class="user-meta">
+          <span class="user-name" id="sidebarUserName">Admin</span>
+          <span class="user-role-badge" id="sidebarRoleBadge">MANAGER</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <!-- Populated by JS based on role -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sys-status"><div class="status-dot"></div><span>System Online</span></div>
+        <span class="version">v2.4.1</span>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main" id="mainArea">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-l">
+          <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="breadcrumb">
+            <span class="bc-root">InvoiceOS</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-page" id="bcPage">Dashboard</span>
+          </div>
+        </div>
+        <div class="topbar-r">
+          <div class="clock" id="clock"></div>
+          <div class="topbar-div"></div>
+          <button class="btn btn-ghost btn-sm" id="logoutBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <!-- ═══ SUPPLIER DASHBOARD ═══ -->
+      <section class="page" id="pageSupplierDash">
+        <div class="page-head">
+          <h1>Supplier Dashboard</h1>
+          <p class="subtitle">Submit invoices and track their verification status</p>
+        </div>
+        <div class="kpi-row" id="supplierKpis"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>My Invoices</h2>
+            <button class="btn btn-primary" id="openSubmitModal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Invoice
+            </button>
+          </div>
+          <div class="card-grid" id="supplierInvoiceGrid"></div>
+        </div>
+      </section>
+
+      <!-- ═══ MANAGER DASHBOARD ═══ -->
+      <section class="page" id="pageManagerDash">
+        <div class="page-head">
+          <h1>Manager Dashboard</h1>
+          <p class="subtitle">Review and approve pending supplier invoices</p>
+        </div>
+        <div class="kpi-row" id="managerKpis"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Pending Verification</h2>
+            <div class="filter-pills" id="managerFilters">
+              <button class="pill active" data-f="pending">Pending</button>
+              <button class="pill" data-f="all">All</button>
+              <button class="pill" data-f="approved">Approved</button>
+              <button class="pill" data-f="rejected">Rejected</button>
+            </div>
+          </div>
+          <div class="card-grid" id="managerInvoiceGrid"></div>
+        </div>
+      </section>
+
+      <!-- ═══ AUDITOR DASHBOARD ═══ -->
+      <section class="page" id="pageAuditorDash">
+        <div class="page-head">
+          <h1>Auditor Dashboard</h1>
+          <p class="subtitle">Read-only view of all invoices and audit trail</p>
+        </div>
+        <div class="kpi-row" id="auditorKpis"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>All Invoices</h2>
+            <div class="search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Search invoices…" id="auditorSearch" />
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-tbl" id="auditorTable">
+              <thead>
+                <tr>
+                  <th>Invoice #</th><th>Supplier</th><th>Amount</th>
+                  <th>Category</th><th>Status</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="auditorTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ AUDIT TRAIL PAGE ═══ -->
+      <section class="page" id="pageAuditTrail">
+        <div class="page-head">
+          <h1>Audit Trail</h1>
+          <p class="subtitle">Immutable, timestamped activity log</p>
+        </div>
+        <div class="panel audit-panel">
+          <div class="panel-head">
+            <span class="audit-count"><span class="mono bold" id="logCount">0</span> entries</span>
+            <button class="btn btn-ghost btn-sm" id="exportCsv">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
+          </div>
+          <div class="table-wrap audit-scroll">
+            <table class="audit-tbl" id="auditLogTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th><th>Invoice ID</th><th>Action</th>
+                  <th>Done By</th><th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="auditLogTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ════════════════ INVOICE SUBMIT MODAL ════════════════ -->
+  <div class="overlay" id="submitOverlay">
+    <div class="modal" id="submitModal">
+      <div class="modal-head">
+        <h2>Submit New Invoice</h2>
+        <button class="modal-x" id="closeSubmitModal" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="submitForm" class="modal-body">
+        <div class="fg">
+          <label for="fInvNum">Invoice Number</label>
+          <input type="text" id="fInvNum" placeholder="INV-2026-XXXX" required />
+        </div>
+        <div class="fg">
+          <label for="fAmount">Amount (₹)</label>
+          <div class="input-pfx"><span>₹</span><input type="number" id="fAmount" placeholder="0" min="1" step="1" required /></div>
+        </div>
+        <div class="fg">
+          <label for="fCategory">Category</label>
+          <select id="fCategory" required>
+            <option value="">Select category…</option>
+            <option>Raw Materials</option>
+            <option>Logistics & Freight</option>
+            <option>Manufacturing Parts</option>
+            <option>Packaging</option>
+            <option>Consulting Services</option>
+            <option>Maintenance & Repairs</option>
+            <option>IT & Software</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg full">
+          <label for="fDesc">Description</label>
+          <textarea id="fDesc" rows="3" placeholder="PO references, line items, notes…"></textarea>
+        </div>
+        <div class="fg full">
+          <label>Attach Document</label>
+          <div class="drop-zone" id="dropZone">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Drag & drop or <em>browse</em></span>
+            <span class="hint">PDF, PNG, JPG — max 10 MB</span>
+            <input type="file" id="fFile" accept=".pdf,.png,.jpg,.jpeg" hidden />
+            <span class="file-chosen" id="fileChosen"></span>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" id="cancelSubmit">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Submit Invoice
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ════════════════ CONFIRM DIALOG ════════════════ -->
+  <div class="overlay" id="confirmOverlay">
+    <div class="modal modal-sm" id="confirmDialog">
+      <div class="modal-head">
+        <h2 id="confirmTitle">Confirm Action</h2>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMsg">Are you sure?</p>
+        <div class="fg" id="remarksGroup">
+          <label for="confirmRemarks">Remarks (optional)</label>
+          <textarea id="confirmRemarks" rows="2" placeholder="Add a note…"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+        <button class="btn" id="confirmOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ INVOICE DETAIL MODAL ════════════════ -->
+  <div class="overlay" id="detailOverlay">
+    <div class="modal" id="detailModal">
+      <div class="modal-head">
+        <h2 id="detailTitle">Invoice Detail</h2>
+        <button class="modal-x" id="closeDetail" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+      <div class="modal-foot" id="detailFoot"></div>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div class="toast-rack" id="toastRack"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
